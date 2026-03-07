@@ -15,7 +15,10 @@ import (
 )
 
 // ListEventPipelinesInput represents event pipelines list query parameters
-type ListEventPipelinesInput struct{}
+type ListEventPipelinesInput struct {
+	Limit int `json:"limit,omitempty"`
+	Page  int `json:"p,omitempty"`
+}
 
 // GetEventPipelineInput represents single event pipeline query parameters
 type GetEventPipelineInput struct {
@@ -71,8 +74,17 @@ func listEventPipelinesTool(getClient client.GetClientFunc) toolset.ServerTool {
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
-				Type:       "object",
-				Properties: map[string]*jsonschema.Schema{},
+				Type: "object",
+				Properties: map[string]*jsonschema.Schema{
+					"limit": {
+						Type:        "integer",
+						Description: "Page size (default 20)",
+					},
+					"p": {
+						Type:        "integer",
+						Description: "Page number (starts from 1)",
+					},
+				},
 			},
 		},
 		toolset.MakeToolHandler(func(ctx context.Context, req *mcp.CallToolRequest, input ListEventPipelinesInput) (*mcp.CallToolResult, error) {
@@ -86,7 +98,8 @@ func listEventPipelinesTool(getClient client.GetClientFunc) toolset.ServerTool {
 				return toolset.NewToolResultError(err.Error()), nil
 			}
 
-			return toolset.MarshalResult(result), nil
+			items, total := toolset.SlicePage(result, input.Page, input.Limit)
+			return toolset.MarshalResult(types.PageResp[types.EventPipeline]{List: items, Total: total}), nil
 		}),
 	)
 }

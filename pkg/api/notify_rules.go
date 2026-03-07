@@ -13,7 +13,10 @@ import (
 )
 
 // ListNotifyRulesInput represents notification rules list query parameters
-type ListNotifyRulesInput struct{}
+type ListNotifyRulesInput struct {
+	Limit int `json:"limit,omitempty"`
+	Page  int `json:"p,omitempty"`
+}
 
 // GetNotifyRuleInput represents single notification rule query parameters
 type GetNotifyRuleInput struct {
@@ -42,8 +45,17 @@ func listNotifyRulesTool(getClient client.GetClientFunc) toolset.ServerTool {
 				ReadOnlyHint: true,
 			},
 			InputSchema: &jsonschema.Schema{
-				Type:       "object",
-				Properties: map[string]*jsonschema.Schema{},
+				Type: "object",
+				Properties: map[string]*jsonschema.Schema{
+					"limit": {
+						Type:        "integer",
+						Description: "Page size (default 20)",
+					},
+					"p": {
+						Type:        "integer",
+						Description: "Page number (starts from 1)",
+					},
+				},
 			},
 		},
 		toolset.MakeToolHandler(func(ctx context.Context, req *mcp.CallToolRequest, input ListNotifyRulesInput) (*mcp.CallToolResult, error) {
@@ -57,7 +69,8 @@ func listNotifyRulesTool(getClient client.GetClientFunc) toolset.ServerTool {
 				return toolset.NewToolResultError(err.Error()), nil
 			}
 
-			return toolset.MarshalResult(result), nil
+			items, total := toolset.SlicePage(result, input.Page, input.Limit)
+			return toolset.MarshalResult(types.PageResp[types.NotifyRule]{List: items, Total: total}), nil
 		}),
 	)
 }

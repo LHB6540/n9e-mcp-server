@@ -56,6 +56,8 @@ type GetAlertInput struct {
 // ListAlertRulesInput represents alert rules list query parameters
 type ListAlertRulesInput struct {
 	GroupId int64 `json:"group_id"`
+	Limit   int   `json:"limit,omitempty"`
+	Page    int   `json:"p,omitempty"`
 }
 
 // GetAlertRuleInput represents single alert rule query parameters
@@ -432,6 +434,14 @@ func listAlertRulesTool(getClient client.GetClientFunc) toolset.ServerTool {
 						Type:        "integer",
 						Description: "Business group ID",
 					},
+					"limit": {
+						Type:        "integer",
+						Description: "Page size (default 20)",
+					},
+					"p": {
+						Type:        "integer",
+						Description: "Page number (starts from 1)",
+					},
 				},
 			},
 		},
@@ -451,7 +461,8 @@ func listAlertRulesTool(getClient client.GetClientFunc) toolset.ServerTool {
 				return toolset.NewToolResultError(err.Error()), nil
 			}
 
-			return toolset.MarshalResult(result), nil
+			items, total := toolset.SlicePage(result, input.Page, input.Limit)
+			return toolset.MarshalResult(types.PageResp[types.AlertRule]{List: items, Total: total}), nil
 		}),
 	)
 }

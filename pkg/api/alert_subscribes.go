@@ -16,11 +16,15 @@ import (
 // ListAlertSubscribesInput represents alert subscriptions list query parameters
 type ListAlertSubscribesInput struct {
 	GroupId int64 `json:"group_id"`
+	Limit   int   `json:"limit,omitempty"`
+	Page    int   `json:"p,omitempty"`
 }
 
 // ListAlertSubscribesByGidsInput represents query alert subscriptions by business group IDs
 type ListAlertSubscribesByGidsInput struct {
-	Gids string `json:"gids,omitempty"`
+	Gids  string `json:"gids,omitempty"`
+	Limit int    `json:"limit,omitempty"`
+	Page  int    `json:"p,omitempty"`
 }
 
 // GetAlertSubscribeInput represents single alert subscription query parameters
@@ -58,6 +62,14 @@ func listAlertSubscribesTool(getClient client.GetClientFunc) toolset.ServerTool 
 						Type:        "integer",
 						Description: "Business group ID",
 					},
+					"limit": {
+						Type:        "integer",
+						Description: "Page size (default 20)",
+					},
+					"p": {
+						Type:        "integer",
+						Description: "Page number (starts from 1)",
+					},
 				},
 			},
 		},
@@ -77,7 +89,8 @@ func listAlertSubscribesTool(getClient client.GetClientFunc) toolset.ServerTool 
 				return toolset.NewToolResultError(err.Error()), nil
 			}
 
-			return toolset.MarshalResult(result), nil
+			items, total := toolset.SlicePage(result, input.Page, input.Limit)
+			return toolset.MarshalResult(types.PageResp[types.AlertSubscribe]{List: items, Total: total}), nil
 		}),
 	)
 }
@@ -98,6 +111,14 @@ func listAlertSubscribesByGidsTool(getClient client.GetClientFunc) toolset.Serve
 						Type:        "string",
 						Description: "Business group IDs comma-separated (empty for all accessible groups)",
 					},
+					"limit": {
+						Type:        "integer",
+						Description: "Page size (default 20)",
+					},
+					"p": {
+						Type:        "integer",
+						Description: "Page number (starts from 1)",
+					},
 				},
 			},
 		},
@@ -117,7 +138,8 @@ func listAlertSubscribesByGidsTool(getClient client.GetClientFunc) toolset.Serve
 				return toolset.NewToolResultError(err.Error()), nil
 			}
 
-			return toolset.MarshalResult(result), nil
+			items, total := toolset.SlicePage(result, input.Page, input.Limit)
+			return toolset.MarshalResult(types.PageResp[types.AlertSubscribe]{List: items, Total: total}), nil
 		}),
 	)
 }

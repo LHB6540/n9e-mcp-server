@@ -15,6 +15,8 @@ import (
 // ListMutesInput represents alert mutes list query parameters
 type ListMutesInput struct {
 	GroupId int64 `json:"group_id"`
+	Limit   int   `json:"limit,omitempty"`
+	Page    int   `json:"p,omitempty"`
 }
 
 // GetMuteInput represents get single mute rule parameters
@@ -94,6 +96,14 @@ func listMutesTool(getClient client.GetClientFunc) toolset.ServerTool {
 						Type:        "integer",
 						Description: "Business group ID",
 					},
+					"limit": {
+						Type:        "integer",
+						Description: "Page size (default 20)",
+					},
+					"p": {
+						Type:        "integer",
+						Description: "Page number (starts from 1)",
+					},
 				},
 			},
 		},
@@ -113,7 +123,8 @@ func listMutesTool(getClient client.GetClientFunc) toolset.ServerTool {
 				return toolset.NewToolResultError(err.Error()), nil
 			}
 
-			return toolset.MarshalResult(result), nil
+			items, total := toolset.SlicePage(result, input.Page, input.Limit)
+			return toolset.MarshalResult(types.PageResp[types.AlertMute]{List: items, Total: total}), nil
 		}),
 	)
 }
