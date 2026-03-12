@@ -222,7 +222,8 @@ type AlertSubscribe struct {
 type Target struct {
 	Id           int64             `json:"id"`
 	GroupId      int64             `json:"group_id"`
-	GroupObj     *BusiGroup        `json:"group_obj,omitempty"`
+	GroupIds     []int64           `json:"group_ids,omitempty"`
+	GroupObjs    []*BusiGroup      `json:"group_objs,omitempty"`
 	Ident        string            `json:"ident"`
 	Note         string            `json:"note"`
 	Tags         []string          `json:"tags"`
