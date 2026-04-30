@@ -1,0 +1,17 @@
+.git
+.github
+.claude
+doc
+npm
+scripts
+README.md
+README_zh.md
+.goreleaser.yaml
+.gitignore
+opencode.json
+.mcp.json
+.env
+.env.*
+docker/.env
+docker/.env.*
+n9e-mcp-server
